@@ -6,22 +6,50 @@
 
 <style>
 body {
-  font-family: sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   padding: 20px;
+  background: #f5f5f5;
 }
+
 .container {
   max-width: 400px;
   margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
 }
-.btn {
+
+h2 {
+  margin-bottom: 10px;
+}
+
+label {
+  font-size: 14px;
+  display: block;
+  margin-top: 15px;
+}
+
+input {
   width: 100%;
   padding: 12px;
-  margin-top: 10px;
+  margin-top: 5px;
+  font-size: 16px;
 }
+
+.btn {
+  width: 100%;
+  padding: 15px;
+  margin-top: 20px;
+  font-size: 18px;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  background: #2b5cff;
+}
+
 .message {
   margin-top: 15px;
   font-size: 14px;
-  word-break: break-all;
 }
 </style>
 </head>
@@ -29,13 +57,16 @@ body {
 <body>
 
 <div class="container">
-  <h2>弁当予約（テスト）</h2>
+  <h2>弁当予約</h2>
 
   <label>名前</label>
-  <input id="name"><br>
+  <input id="name" placeholder="例：山田 太郎">
 
-  <label>日付</label>
-  <input type="date" id="date"><br>
+  <label>予約日</label>
+  <input type="date" id="date">
+
+  <label>数量</label>
+  <input id="qty" value="1">
 
   <button class="btn" onclick="submitForm()">予約する</button>
 
@@ -43,7 +74,9 @@ body {
 </div>
 
 <script>
-const API_URL ="https://script.google.com/macros/s/AKfycbyZZvwRj_XtZWKPxZT-gBjJ9eA_DSOhil7B9dlEuai4PI6whY6F71316nO1oaFbsdwE/exec";
+
+// ✅ 最新 Apps Script URL
+const API_URL = "https://script.google.com/macros/s/AKfycbxouPnlU8TK0ok6O0xx99vRVBRw0DXJDkoS4og_VdDvUeSpaiR17u7GrahMaQHs8cGw/exec";
 
 // 初期日付
 document.getElementById("date").value =
@@ -56,42 +89,46 @@ function showMessage(msg, color="black") {
   el.style.color = color;
 }
 
-// 送信
+// 送信処理
 function submitForm() {
-  alert("ボタン押された");  // ←ここで必ず反応確認
-
-  const name = document.getElementById("name").value;
+  const name = document.getElementById("name").value.trim();
   const date = document.getElementById("date").value;
+  const qty = document.getElementById("qty").value;
+
+  if (!name) {
+    showMessage("名前を入力してください", "red");
+    return;
+  }
 
   const data = {
     name: name,
     date: date,
-    quantity: 1,
+    quantity: qty,
     comment: ""
   };
 
-  showMessage("送信開始...");
+  showMessage("送信中...");
 
   fetch(API_URL, {
     method: "POST",
+    mode: "no-cors",   // ✅ CORS回避（超重要）
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify(data)
   })
-  .then(res => {
-    console.log("レスポンス受信", res);
-    return res.text();  // ← JSONじゃなくTEXTで受ける
-  })
-  .then(text => {
-    console.log("レスポンス内容:", text);
-    showMessage("成功: " + text, "green");
+  .then(() => {
+    showMessage("✅ 予約を送信しました（反映を確認してください）", "green");
+
+    // 入力リセット（任意）
+    document.getElementById("qty").value = 1;
   })
   .catch(err => {
-    console.error("エラー:", err);
-    showMessage("エラー: " + err, "red");
+    console.error(err);
+    showMessage("❌ 通信エラー: " + err, "red");
   });
 }
+
 </script>
 
 </body>
