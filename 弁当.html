@@ -1,15 +1,98 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>弁当予約</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  padding: 20px;
+}
+.container {
+  max-width: 400px;
+  margin: auto;
+}
+.btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+}
+.message {
+  margin-top: 15px;
+  font-size: 14px;
+  word-break: break-all;
+}
+</style>
+</head>
+
 <body>
 
-<button onclick="test()">テスト</button>
+<div class="container">
+  <h2>弁当予約（テスト）</h2>
+
+  <label>名前</label>
+  <input id="name"><br>
+
+  <label>日付</label>
+  <input type="date" id="date"><br>
+
+  <button class="btn" onclick="submitForm()">予約する</button>
+
+  <div id="message" class="message"></div>
+</div>
 
 <script>
-function test() {
-  alert("動いた");
+const API_URL = "https://script.google.com/macros/s/AKfycbzsjhu8EmizKHdsxV_yM1QHqWwX08IVobIaWiJTGKa3dzKtcpDnzlOgRDxm9X90WcCn/exec";
+
+// 初期日付
+document.getElementById("date").value =
+  new Date().toISOString().split("T")[0];
+
+// メッセージ表示
+function showMessage(msg, color="black") {
+  const el = document.getElementById("message");
+  el.innerText = msg;
+  el.style.color = color;
+}
+
+// 送信
+function submitForm() {
+  alert("ボタン押された");  // ←ここで必ず反応確認
+
+  const name = document.getElementById("name").value;
+  const date = document.getElementById("date").value;
+
+  const data = {
+    name: name,
+    date: date,
+    quantity: 1,
+    comment: ""
+  };
+
+  showMessage("送信開始...");
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  })
+  .then(res => {
+    console.log("レスポンス受信", res);
+    return res.text();  // ← JSONじゃなくTEXTで受ける
+  })
+  .then(text => {
+    console.log("レスポンス内容:", text);
+    showMessage("成功: " + text, "green");
+  })
+  .catch(err => {
+    console.error("エラー:", err);
+    showMessage("エラー: " + err, "red");
+  });
 }
 </script>
 
 </body>
 </html>
-``
