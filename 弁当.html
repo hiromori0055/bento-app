@@ -74,6 +74,11 @@ input {
 .cancel {
   background: #ff3b30;
 }
+
+.message {
+  margin-top: 15px;
+  font-size: 16px;
+}
 </style>
 </head>
 
@@ -102,24 +107,27 @@ input {
 
   <button class="btn reserve" onclick="submitForm()">予約する</button>
   <button class="btn cancel" onclick="cancelOrder()">キャンセル</button>
+
+  <div id="message" class="message"></div>
 </div>
 
 <script>
-// ===== 初期設定 =====
+const API_URL = "https://script.google.com/macros/s/AKfycbwXd3pxDgSNggXirCi1CBe95PKTPalZvBpw6rat-587YfqhWw8pmC0EnoNTpv2QA1JnQw/exec";
 
+// ===== 初期設定 =====
 const today = new Date().toISOString().split("T")[0];
 
 const dateInput = document.getElementById("date");
 dateInput.value = today;
-dateInput.min = today; // 過去日不可
+dateInput.min = today;
 
-// 名前保存
+// 名前記憶
 const savedName = localStorage.getItem("userName");
 if (savedName) {
   document.getElementById("name").value = savedName;
 }
 
-// ===== 数量変更 =====
+// ===== 数量 =====
 function changeQty(n) {
   let qty = parseInt(document.getElementById("qty").value) || 1;
   qty += n;
@@ -127,14 +135,20 @@ function changeQty(n) {
   document.getElementById("qty").value = qty;
 }
 
-// ===== 共通データ取得 =====
+// ===== メッセージ表示 =====
+function showMessage(msg, color="black") {
+  const el = document.getElementById("message");
+  el.innerText = msg;
+  el.style.color = color;
+}
+
+// ===== データ取得 =====
 function getData() {
   const name = document.getElementById("name").value.trim();
   const date = document.getElementById("date").value;
-  const qty = document.getElementById("qty").value;
 
   if (!name) {
-    alert("名前を入力してください");
+    showMessage("名前を入力してください", "red");
     return null;
   }
 
@@ -143,7 +157,7 @@ function getData() {
   return {
     name: name,
     date: date,
-    quantity: qty,
+    quantity: document.getElementById("qty").value,
     comment: document.getElementById("comment").value
   };
 }
@@ -161,23 +175,30 @@ function submitForm() {
   const data = getData();
   if (!data) return;
 
-  // 締切チェック
   if (isAfterDeadline(data.date)) {
-    alert("締切（9:00）を過ぎています");
+    showMessage("締切（9:00）を過ぎています", "red");
     return;
   }
 
-  fetch("https://script.google.com/macros/s/AKfycbwXd3pxDgSNggXirCi1CBe95PKTPalZvBpw6rat-587YfqhWw8pmC0EnoNTpv2QA1JnQw/exec", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(data)
-})
+  showMessage("送信中...");
 
+  fetch(https://script.google.com/macros/s/AKfycbzsjhu8EmizKHdsxV_yM1QHqWwX08IVobIaWiJTGKa3dzKtcpDnzlOgRDxm9X90WcCn/exec, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
   .then(res => res.json())
-  .then(res => alert(res.message))
-  .catch(() => alert("エラー"));
+  .then(res => {
+    if (res.status === "OK") {
+      showMessage("✅ 予約完了しました", "green");
+    } else {
+      showMessage(res.message, "red");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    showMessage("通信エラー: " + err, "red");
+  });
 }
 
 // ===== キャンセル =====
@@ -188,24 +209,33 @@ function cancelOrder() {
   if (!data) return;
 
   if (isAfterDeadline(data.date)) {
-    alert("締切後はキャンセルできません");
+    showMessage("締切後はキャンセルできません", "red");
     return;
   }
 
-  fetch("https://script.google.com/macros/s/AKfycbwXd3pxDgSNggXirCi1CBe95PKTPalZvBpw6rat-587YfqhWw8pmC0EnoNTpv2QA1JnQw/exec", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    mode: "cancel",
-    name: data.name,
-    date: data.date
+  showMessage("送信中...");
+
+  fetch(https://script.google.com/macros/s/AKfycbzsjhu8EmizKHdsxV_yM1QHqWwX08IVobIaWiJTGKa3dzKtcpDnzlOgRDxm9X90WcCn/exec, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode: "cancel",
+      name: data.name,
+      date: data.date
+    })
   })
-})
   .then(res => res.json())
-  .then(res => alert(res.message))
-  .catch(() => alert("エラー"));
+  .then(res => {
+    if (res.status === "OK") {
+      showMessage("✅ キャンセルしました", "blue");
+    } else {
+      showMessage(res.message, "red");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    showMessage("通信エラー: " + err, "red");
+  });
 }
 </script>
 
